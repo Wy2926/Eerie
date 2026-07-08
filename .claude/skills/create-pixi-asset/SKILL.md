@@ -21,7 +21,7 @@ argument-hint: "[asset-kind] [asset-name]"
 ## 推荐步骤
 
 1. 定义资产用途和屏幕可读性要求。
-2. 设计剪影：Q版明军角色、普通倭寇、精英、Boss、投射物必须一眼区分。
+2. 设计剪影：明军角色、普通倭寇、精英、Boss、投射物必须一眼区分；成熟像素风（参考 Skul: The Hero Slayer），禁止 Q 版比例。
 3. 设计颜色语义：友方、敌方、危险、奖励，以及状态颜色（流血红、燃烧橙、冰冻蓝、中毒绿等）。
 4. 创建 `createXView(options)` 或 `drawX(graphics, state)`。
 5. 增加轻量动画入口，不要把玩法状态写进视图。

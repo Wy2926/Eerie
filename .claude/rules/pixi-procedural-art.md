@@ -51,7 +51,7 @@ export function createPlayerView(options: ProceduralViewOptions): PIXI.Container
 
 ## 绘制风格
 
-- 整体风格为 **像素化 Q 版**：用 Graphics 绘制大像素块网格（逻辑像素 1 格 ≈ 屏幕 3~4px），角色约 2 头身，调色板每实体 4~6 色。
+- 整体风格为 **成熟像素风**（像素成熟度参考 Skul: The Hero Slayer）：用 Graphics 绘制像素网格（逻辑像素 1 格 ≈ 屏幕 2px，高密度网格换取细节），角色约 3~4 头身，禁止 Q 版 chibi 比例；调色板每实体 8~16 色，每种材质至少 2~3 级明暗着色 + 黑色描边。
 - 关闭抗锯齿，缩放用最近邻（nearest），保持硬像素边缘；像素坐标对齐网格，避免亚像素模糊。
 - 动画由时间连续插值驱动部件位移/旋转/挤压/翻转，状态来自 ECS 组件。
 - 俯视角可读性优先于复杂细节。

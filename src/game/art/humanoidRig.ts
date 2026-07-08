@@ -26,6 +26,8 @@ export interface HumanoidRigOptions {
   strideAmp?: number;
   /** 每个实例的相位差，避免群体同步摆动 */
   phaseSeed?: number;
+  /** 躯干原点相对实体中心的基准偏移（px），用于对齐视觉重心 */
+  baseY?: number;
 }
 
 /**
@@ -42,10 +44,12 @@ export class HumanoidRig implements CharacterView {
   private headJoint: Container;
   private o: HumanoidRigOptions;
   private phase: number;
+  private baseY: number;
 
   constructor(options: HumanoidRigOptions) {
     this.o = options;
     this.phase = options.phaseSeed ?? Math.random() * 100;
+    this.baseY = options.baseY ?? 0;
     const p = options.parts;
     this.root = new Container();
     this.body = new Container();
@@ -112,7 +116,7 @@ export class HumanoidRig implements CharacterView {
     // 身体起伏：idle 慢呼吸 + run 弹跳，连续混合
     const idleBob = Math.sin(t * 1.6 * 2) * 0.8;
     const runBob = Math.abs(Math.sin(t * (4 + run * 6) * 2)) * 2.5;
-    this.body.y = -lerp(idleBob * 0.5 + 0.5, runBob, run);
+    this.body.y = this.baseY - lerp(idleBob * 0.5 + 0.5, runBob, run);
     this.body.rotation = lerp(this.body.rotation, run * targetFlip * 0.08, 0.2);
     const breath = 1 + Math.sin(t * 1.6 * 2) * 0.015 * (1 - run);
     this.body.scale.y = lerp(this.body.scale.y, breath, 0.3);

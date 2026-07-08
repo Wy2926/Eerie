@@ -4,11 +4,30 @@ import { PhysicsWorld } from './core/physics/physicsWorld';
 import { createPixiApp } from './core/render/pixiApp';
 import { ViewRegistry } from './core/render/viewRegistry';
 import { FixedTimestep } from './core/time/fixedTimestep';
-import { spawnArenaWalls, spawnDemoEntity } from './game/factories/demoFactory';
+import { RUN_DURATION_SEC } from './game/balance/waves';
+import { DamageInboxC } from './game/components/gameplay';
+import { spawnPlayer } from './game/factories/entityFactory';
+import { createGameState } from './game/gameState';
+import { AttackHitSystem } from './game/systems/attackHitSystem';
+import { applyChoice, rollChoices } from './game/systems/bingfaChoice';
+import { CameraSystem } from './game/systems/cameraSystem';
 import { CleanupSystem } from './game/systems/cleanupSystem';
+import { DamageSystem } from './game/systems/damageSystem';
+import { EnemyAISystem } from './game/systems/enemyAISystem';
+import { Hud } from './game/systems/hud';
+import { InputState } from './game/systems/inputSystem';
 import { LifetimeSystem } from './game/systems/lifetimeSystem';
 import { MatterStepSystem } from './game/systems/matterStepSystem';
+import { PickupSystem } from './game/systems/pickupSystem';
+import { PlayerIntentSystem } from './game/systems/playerIntentSystem';
 import { RenderSyncSystem } from './game/systems/renderSyncSystem';
+import { SpawnWaveSystem } from './game/systems/spawnWaveSystem';
+import { StatusSystem } from './game/systems/statusSystem';
+import { StatusVfxSystem } from './game/systems/statusVfxSystem';
+import { WeaponFireSystem } from './game/systems/weaponFireSystem';
+import { PlayerBuildC } from './game/components/gameplay';
+
+const SYNERGY_BANNER_MS = 3000;
 
 async function bootstrap(): Promise<void> {
   const { app, layers } = await createPixiApp();
@@ -16,37 +35,81 @@ async function bootstrap(): Promise<void> {
   const physics = new PhysicsWorld();
   const views = new ViewRegistry();
   const timestep = new FixedTimestep();
+  const input = new InputState();
+  const state = createGameState();
   const overlay = new DebugOverlay(layers.ui);
+  const hud = new Hud(layers.ui, () => app.screen.width, () => app.screen.height);
 
+  // 全局伤害事件收件箱实体
+  const damageInboxEntity = world.createEntity();
+  world.addComponent(damageInboxEntity, DamageInboxC, { events: [] });
+
+  world.addSystem(new PlayerIntentSystem(input, physics));
+  world.addSystem(new EnemyAISystem(physics));
+  world.addSystem(new WeaponFireSystem(views, layers));
+  world.addSystem(new SpawnWaveSystem(state, views, physics, layers));
   world.addSystem(new MatterStepSystem(physics));
+  world.addSystem(new AttackHitSystem(damageInboxEntity));
+  world.addSystem(new StatusSystem(damageInboxEntity));
+  world.addSystem(new DamageSystem(state, physics, views, layers, damageInboxEntity));
+  world.addSystem(new PickupSystem());
   world.addSystem(new LifetimeSystem());
   world.addSystem(new CleanupSystem(views, physics));
 
   const renderSync = new RenderSyncSystem(views);
+  const statusVfx = new StatusVfxSystem(views);
+  const camera = new CameraSystem(layers.world, layers.vfx, () => app.screen.width, () => app.screen.height);
 
-  const { width, height } = app.screen;
-  spawnArenaWalls(physics, world, width, height);
-  for (let i = 0; i < 8; i++) {
-    const angle = (Math.PI * 2 * i) / 8;
-    spawnDemoEntity(
-      world,
-      views,
-      physics,
-      layers,
-      width / 2 + Math.cos(angle) * 120,
-      height / 2 + Math.sin(angle) * 120,
-      Math.cos(angle) * 180,
-      Math.sin(angle) * 180,
-    );
-  }
+  const player = spawnPlayer(world, views, physics, layers, 'jinyiwei', 0, 0);
+
+  window.addEventListener('keydown', (e) => {
+    if (state.phase !== 'choosing') return;
+    const index = ['1', '2', '3'].indexOf(e.key);
+    if (index < 0 || index >= state.choices.length) return;
+    const build = world.getComponent(player, PlayerBuildC)!;
+    const formed = applyChoice(build, state.choices[index]);
+    if (formed.length > 0) {
+      state.formedSynergyId = formed[0];
+      state.formedSynergyMsRemaining = SYNERGY_BANNER_MS;
+    }
+    build.pendingLevelUps -= 1;
+    state.choices = [];
+    state.phase = 'running';
+  });
 
   app.ticker.add((ticker) => {
     const frameDeltaMs = ticker.deltaMS;
-    const steps = timestep.advance(frameDeltaMs);
-    for (let i = 0; i < steps; i++) {
-      world.update(timestep.stepMs);
+
+    if (state.phase === 'running') {
+      const steps = timestep.advance(frameDeltaMs);
+      for (let i = 0; i < steps; i++) {
+        state.elapsedMs += timestep.stepMs;
+        world.update(timestep.stepMs);
+      }
+      if (state.elapsedMs >= RUN_DURATION_SEC * 1000 && state.phase === 'running') {
+        state.phase = 'victory';
+      }
+      const build = world.getComponent(player, PlayerBuildC);
+      if (build && build.pendingLevelUps > 0 && state.phase === 'running') {
+        const choices = rollChoices(build).map((c) => c.id);
+        if (choices.length > 0) {
+          state.choices = choices;
+          state.phase = 'choosing';
+          hud.showChoices(choices);
+        } else {
+          build.pendingLevelUps = 0;
+        }
+      }
     }
+
+    if (state.formedSynergyMsRemaining > 0) {
+      state.formedSynergyMsRemaining -= frameDeltaMs;
+    }
+
     renderSync.update(world, frameDeltaMs);
+    statusVfx.update(world);
+    camera.update(world);
+    hud.update(world, state);
     overlay.frame(frameDeltaMs, world, physics);
   });
 }

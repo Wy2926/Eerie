@@ -85,7 +85,7 @@ export function spawnEnemy(
   world.addComponent(entity, HealthC, { hp: cfg.maxHp, maxHp: cfg.maxHp });
   world.addComponent(entity, StatusEffectsC, { active: new Map() });
 
-  const view = createWokouView(3 * cfg.scale);
+  const view = createWokouView(3 * cfg.scale, cfg.elite);
   layers.world.addChild(view);
   views.set(entity, view);
 

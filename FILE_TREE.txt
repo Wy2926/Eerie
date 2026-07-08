@@ -59,6 +59,7 @@
 ./src/core/render/pixiApp.ts
 ./src/core/render/viewRegistry.ts
 ./src/core/time/fixedTimestep.ts
+./src/game/art/hudFrames.ts
 ./src/game/art/jinyiwei.ts
 ./src/game/art/pixelSprite.ts
 ./src/game/art/slashVfx.ts

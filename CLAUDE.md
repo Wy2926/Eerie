@@ -48,6 +48,7 @@ src/
 ## PixiJS 程序化素材规则
 
 - **素材准则（强制）**：新增任何技能、角色、武器、怪物、特效、掉落物、UI 装饰素材，必须使用 `.claude/skills/` 中对应的 skill 流程（create-pixi-asset / create-vfx / create-character / create-enemy / create-weapon / create-bingfa 等）。
+- **成品标准（强制）**：角色、技能、特效、HUD 等素材必须按最终版实现，禁止用临时占位（纯色方块、裸 Text、无细节几何）冒充成品；如确实需要占位，必须在代码注释与 PR 中显式标注 TODO 并说明补齐计划。
 - **一素材一文件（强制）**：每个素材必须有独立文件放在 `src/game/art/`，用 JS/TS 代码（PixiJS Graphics/Container）表达，导出 `createXxxView()` 工厂函数；禁止把绘制代码内联在系统、工厂或 main 中。
 
 - 禁止引入 `.png`、`.jpg`、`.webp`、spritesheet、texture atlas 作为游戏资产。

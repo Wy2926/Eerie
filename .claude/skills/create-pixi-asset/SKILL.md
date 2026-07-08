@@ -1,6 +1,6 @@
 ---
 name: create-pixi-asset
-description: 创建或修改完全由 PixiJS 代码绘制的游戏素材。适用于玩家、怪物、Boss、投射物、掉落、特效、UI 装饰等无图片资产工作。
+description: 创建或修改完全由 PixiJS 代码绘制的游戏素材。适用于明军角色、倭寇、Boss、投射物、掉落、状态特效、UI 装饰等无图片资产工作。
 argument-hint: "[asset-kind] [asset-name]"
 ---
 
@@ -21,8 +21,8 @@ argument-hint: "[asset-kind] [asset-name]"
 ## 推荐步骤
 
 1. 定义资产用途和屏幕可读性要求。
-2. 设计剪影：玩家、普通怪、精英、Boss、投射物必须一眼区分。
-3. 设计颜色语义：友方、敌方、危险、奖励、稀有度。
+2. 设计剪影：Q版明军角色、普通倭寇、精英、Boss、投射物必须一眼区分。
+3. 设计颜色语义：友方、敌方、危险、奖励，以及状态颜色（流血红、燃烧橙、冰冻蓝、中毒绿等）。
 4. 创建 `createXView(options)` 或 `drawX(graphics, state)`。
 5. 增加轻量动画入口，不要把玩法状态写进视图。
 6. 如资产会大量出现，说明缓存或对象池策略。

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-本项目是一个 **PixiJS + Matter.js + 自研 ECS** 的俯视角肉鸽生存游戏，玩法参考《吸血鬼幸存者》类型，但代码和架构必须保持原创。
+本项目是一个 **PixiJS + Matter.js + 自研 ECS** 的俯视角肉鸽生存游戏：以 **Q版明朝抗倭** 为背景，自动攻击 + 主动走位 + Roguelite Build（兵法系统）。玩法参考《吸血鬼幸存者》类型，但代码和架构必须保持原创。产品需求见 `docs/prd/`，设计提炼见 `docs/GAME_DESIGN.md` 与 `docs/BUILD_SYSTEM.md`。
 
 所有人物、怪物、特效、掉落物、UI 装饰素材都必须由 PixiJS 代码绘制。默认使用 TypeScript；如果项目选择纯 JavaScript，仍保持同样目录和边界。
 
@@ -63,14 +63,16 @@ src/
 - `PhysicsRef` 只能保存 bodyId，不要让 Component 直接持有业务逻辑 Body。
 - Body 创建、销毁、同步必须集中在 Physics adapter/System。
 
-## 类吸血鬼幸存者玩法规则
+## 玩法规则
 
-- 玩家移动是核心输入；攻击默认自动化。
+- 玩家移动是核心输入；攻击默认自动化。不增加操作复杂度，只增加决策深度。
+- 核心公式：角色 × 武器 × 兵法 × 状态反应 = Build。升级三选一的内容是兵法，80% 是机制而非数值。
 - 怪物生成必须数据驱动：时间、权重、上限、精英、Boss。
-- 武器、被动、升级必须数据驱动。
+- 角色、武器、兵法、状态、状态反应、联动必须数据驱动（`src/game/balance/`）。
+- 武器无品质、无强化；携带上限为主武器 1 + 副武器 2~3，成长全部来自兵法。
 - 每个武器至少拆成：配置、冷却、目标选择、生成攻击实体、命中处理、VFX。
 - 怪物 AI 默认简单、可批量运行，避免复杂寻路。
-- 掉落物、XP、磁吸、升级选择要独立成系统。
+- 掉落物、XP、磁吸、升级选择要独立成系统；状态与状态反应也要独立成系统（StatusSystem / ReactionSystem），不要散落在武器逻辑中。
 - 不要把所有玩法塞进 PlayerSystem 或 GameSystem。
 
 ## 推荐系统顺序
@@ -85,13 +87,15 @@ src/
 8. MatterStepSystem
 9. CollisionEventSystem
 10. DamageSystem
-11. PickupSystem
-12. LevelUpSystem
-13. LifetimeSystem
-14. CleanupSystem
-15. RenderSyncSystem
-16. VfxSystem
-17. DebugOverlaySystem
+11. StatusSystem
+12. ReactionSystem
+13. PickupSystem
+14. LevelUpSystem
+15. LifetimeSystem
+16. CleanupSystem
+17. RenderSyncSystem
+18. VfxSystem
+19. DebugOverlaySystem
 
 ## 禁止事项
 

@@ -1,10 +1,12 @@
 ---
 name: create-enemy
-description: 新增类吸血鬼幸存者游戏中的敌人、精英怪或 Boss。包括 ECS 组件、AI、Matter.js 碰撞、PixiJS 程序化外观、掉落和波次配置。
+description: 新增倭寇敌人、精英怪或 Boss。包括 ECS 组件、AI、Matter.js 碰撞、PixiJS 程序化外观、掉落和波次配置。
 argument-hint: "[enemy-id]"
 ---
 
 # Create Enemy Skill
+
+> 敌人主题为倭寇（Q版明朝抗倭背景）。敌人需考虑与状态/状态反应的交互（可被施加流血、燃烧、冰冻等，及反应触发时的表现）。
 
 ## 敌人必须包含
 
@@ -14,6 +16,7 @@ argument-hint: "[enemy-id]"
 - Matter.js 碰撞：圆形或简单 sensor/solid body。
 - PixiJS 程序化外观：不得依赖图片。
 - 掉落逻辑：通过 DropTable 或 XPValue，不要写死在死亡逻辑中。
+- 状态承载：可被附加状态，状态视觉反馈由 StatusSystem/VFX 处理，不写在敌人逻辑里。
 
 ## 精英和 Boss
 

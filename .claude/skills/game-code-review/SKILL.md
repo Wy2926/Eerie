@@ -1,6 +1,6 @@
 ---
 name: game-code-review
-description: 审查 PixiJS + Matter.js + 自研 ECS 类吸血鬼肉鸽项目的代码改动，重点检查架构边界、性能、素材规则、物理同步和测试缺口。
+description: 审查 PixiJS + Matter.js + 自研 ECS 肉鸽项目的代码改动，重点检查架构边界、性能、素材规则、物理同步、数据驱动约束和测试缺口。
 argument-hint: "[scope]"
 ---
 
@@ -16,6 +16,8 @@ argument-hint: "[scope]"
 6. 是否产生每帧分配热点。
 7. 是否缺少清理 Body/View 的逻辑。
 8. 是否缺少测试或最小验证。
+9. 角色、武器、兵法、状态、反应、联动是否数据驱动（`src/game/balance/`），而非硬编码在 System。
+10. 是否违反设计约束：武器品质/强化、状态逻辑散落在武器代码、兵法效果写死。
 
 ## 风险等级
 

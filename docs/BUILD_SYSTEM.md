@@ -1,6 +1,6 @@
 # 兵法（Build）系统设计
 
-> 本文档定义游戏最核心的兵法系统设计方向，不涉及技术实现。整体定位见 `docs/GAME_DESIGN.md`。
+> 本文档定义游戏最核心的兵法系统设计方向，不涉及技术实现。整体定位见 `docs/GAME_DESIGN.md`；完整原始需求见 `docs/prd/01-core-vision-and-build-system.md`。
 
 ## 定位
 

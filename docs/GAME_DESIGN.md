@@ -1,6 +1,6 @@
 # Game Design Document
 
-> 本文档定义游戏设计方向，不涉及技术实现。兵法（Build）系统详见 `docs/BUILD_SYSTEM.md`。
+> 本文档定义游戏设计方向，不涉及技术实现。兵法（Build）系统详见 `docs/BUILD_SYSTEM.md`；完整产品需求按章节存放于 `docs/prd/`。
 
 ## 一句话定位
 

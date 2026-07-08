@@ -13,9 +13,12 @@
 ./.claude/rules/testing.md
 ./.claude/settings.example.json
 ./.claude/skills/balance-roguelike/SKILL.md
+./.claude/skills/create-bingfa/SKILL.md
+./.claude/skills/create-character/SKILL.md
 ./.claude/skills/create-enemy/SKILL.md
 ./.claude/skills/create-feature/SKILL.md
 ./.claude/skills/create-pixi-asset/SKILL.md
+./.claude/skills/create-status-reaction/SKILL.md
 ./.claude/skills/create-vfx/SKILL.md
 ./.claude/skills/create-weapon/SKILL.md
 ./.claude/skills/debug-frame/SKILL.md
@@ -27,6 +30,7 @@
 ./README.md
 ./docs/AI_WORKFLOW.md
 ./docs/BALANCE_MODEL.md
+./docs/BUILD_SYSTEM.md
 ./docs/CODING_STANDARDS.md
 ./docs/CONTENT_PIPELINE.md
 ./docs/GAME_DESIGN.md
@@ -36,7 +40,11 @@
 ./docs/adr/0001-ecs-is-source-of-truth.md
 ./docs/adr/0002-pixi-procedural-assets-only.md
 ./docs/adr/0003-matter-fixed-timestep.md
+./docs/prd/01-core-vision-and-build-system.md
+./docs/templates/BINGFA_TEMPLATE.md
+./docs/templates/CHARACTER_TEMPLATE.md
 ./docs/templates/ENEMY_TEMPLATE.md
 ./docs/templates/FEATURE_SPEC_TEMPLATE.md
 ./docs/templates/PIXIJS_ASSET_TEMPLATE.md
+./docs/templates/STATUS_REACTION_TEMPLATE.md
 ./docs/templates/WEAPON_TEMPLATE.md

@@ -10,7 +10,7 @@ argument-hint: "[feature-name]"
 
 ## 流程
 
-1. 识别功能类型：玩家、敌人、武器、掉落、升级、波次、UI、VFX、调试。
+1. 识别功能类型：角色、敌人（倭寇）、武器、兵法、状态/状态反应、掉落、升级、波次、UI、VFX、调试。若属于兵法/状态/角色，优先使用对应专用 skill（create-bingfa / create-status-reaction / create-character）。
 2. 列出需要新增或修改的 Component。
 3. 列出需要新增或修改的 System。
 4. 列出是否需要 PixiJS 程序化资产。

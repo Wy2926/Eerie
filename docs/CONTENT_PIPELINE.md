@@ -6,12 +6,13 @@
 
 ## 资产分类
 
-- Player view
-- Enemy view
+- Character view（明军角色）
+- Enemy view（倭寇）
 - Boss view
 - Weapon projectile view
 - Area effect view
 - Pickup view
+- Status / Reaction VFX view（燃烧、毒爆、连锁闪电等）
 - UI ornament view
 - Debug view
 
@@ -19,10 +20,11 @@
 
 ```txt
 src/game/art/
-├── player/
+├── characters/
 ├── enemies/
 ├── weapons/
 ├── pickups/
+├── status/
 ├── vfx/
 ├── ui/
 └── shared/

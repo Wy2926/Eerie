@@ -59,8 +59,12 @@
 ./src/core/render/pixiApp.ts
 ./src/core/render/viewRegistry.ts
 ./src/core/time/fixedTimestep.ts
-./src/game/art/characters.ts
+./src/game/art/jinyiwei.ts
 ./src/game/art/pixelSprite.ts
+./src/game/art/slashVfx.ts
+./src/game/art/swordWaveVfx.ts
+./src/game/art/wokou.ts
+./src/game/art/xpGem.ts
 ./src/game/balance/bingfa.ts
 ./src/game/balance/characters.ts
 ./src/game/balance/enemies.ts

@@ -12,7 +12,7 @@
 
 ## Phase 1: First Playable Loop（MVP 第一版，见 `docs/prd/02-mvp-first-slice.md`）
 
-- 锦衣卫（处决机制）+ 绣春刀，像素化 Q 版程序化绘制。
+- 锦衣卫（处决机制）+ 绣春刀，成熟像素风程序化绘制（参考 Skul: The Hero Slayer）。
 - 倭寇杂兵追踪玩家，3 分钟后精英变体。
 - 碰撞和伤害。
 - XP 掉落和拾取。

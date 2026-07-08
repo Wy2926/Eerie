@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-本项目是一个 **PixiJS + Matter.js + 自研 ECS** 的俯视角肉鸽生存游戏：以 **Q版明朝抗倭** 为背景，自动攻击 + 主动走位 + Roguelite Build（兵法系统）。玩法参考《吸血鬼幸存者》类型，但代码和架构必须保持原创。产品需求见 `docs/prd/`，设计提炼见 `docs/GAME_DESIGN.md` 与 `docs/BUILD_SYSTEM.md`。
+本项目是一个 **PixiJS + Matter.js + 自研 ECS** 的俯视角肉鸽生存游戏：以 **明朝抗倭** 为背景，自动攻击 + 主动走位 + Roguelite Build（兵法系统）。玩法参考《吸血鬼幸存者》类型，但代码和架构必须保持原创。产品需求见 `docs/prd/`，设计提炼见 `docs/GAME_DESIGN.md` 与 `docs/BUILD_SYSTEM.md`。
 
 所有人物、怪物、特效、掉落物、UI 装饰素材都必须由 PixiJS 代码绘制。默认使用 TypeScript；如果项目选择纯 JavaScript，仍保持同样目录和边界。
 
@@ -11,7 +11,7 @@
 - 不要修改与当前任务无关的文件。
 - 不要绕过类型检查、lint、测试或构建错误。
 - 发现架构冲突时，先修边界，再实现功能。
-- 美术风格为“像素化 Q 版”：PixiJS 程序化绘制大像素块，2 头身比例，受限调色板，硬像素边缘（nearest 缩放、关闭抗锯齿）；细则见 `.claude/rules/pixi-procedural-art.md` 与 `docs/prd/02-mvp-first-slice.md`。
+- 美术风格为“成熟像素风”（像素成熟度参考 Skul: The Hero Slayer）：PixiJS 程序化绘制高密度像素网格，约 3~4 头身比例（禁止 Q 版 chibi），多级明暗着色 + 黑色描边，硬像素边缘（nearest 缩放、关闭抗锯齿）；细则见 `.claude/rules/pixi-procedural-art.md` 与 `docs/prd/02-mvp-first-slice.md`。
 - 对不明确的玩法数值，先实现可配置数据表，不要把数值散落在系统中。
 
 ## 架构不变量

@@ -8,6 +8,7 @@ import { RUN_DURATION_SEC } from './game/balance/waves';
 import { DamageInboxC } from './game/components/gameplay';
 import { spawnPlayer } from './game/factories/entityFactory';
 import { createGameState } from './game/gameState';
+import { AnimationSystem } from './game/systems/animationSystem';
 import { AttackHitSystem } from './game/systems/attackHitSystem';
 import { applyChoice, rollChoices } from './game/systems/bingfaChoice';
 import { CameraSystem } from './game/systems/cameraSystem';
@@ -39,6 +40,7 @@ async function bootstrap(): Promise<void> {
   const state = createGameState();
   const overlay = new DebugOverlay(layers.ui);
   const hud = new Hud(layers.ui, () => app.screen.width, () => app.screen.height);
+  const animation = new AnimationSystem();
 
   // 全局伤害事件收件箱实体
   const damageInboxEntity = world.createEntity();
@@ -46,12 +48,12 @@ async function bootstrap(): Promise<void> {
 
   world.addSystem(new PlayerIntentSystem(input, physics));
   world.addSystem(new EnemyAISystem(physics));
-  world.addSystem(new WeaponFireSystem(views, layers));
-  world.addSystem(new SpawnWaveSystem(state, views, physics, layers));
+  world.addSystem(new WeaponFireSystem(views, layers, animation));
+  world.addSystem(new SpawnWaveSystem(state, views, physics, layers, animation));
   world.addSystem(new MatterStepSystem(physics));
   world.addSystem(new AttackHitSystem(damageInboxEntity));
   world.addSystem(new StatusSystem(damageInboxEntity));
-  world.addSystem(new DamageSystem(state, physics, views, layers, damageInboxEntity));
+  world.addSystem(new DamageSystem(state, physics, views, layers, animation, damageInboxEntity));
   world.addSystem(new PickupSystem());
   world.addSystem(new LifetimeSystem());
   world.addSystem(new CleanupSystem(views, physics));
@@ -60,7 +62,7 @@ async function bootstrap(): Promise<void> {
   const statusVfx = new StatusVfxSystem(views);
   const camera = new CameraSystem(layers.world, layers.vfx, () => app.screen.width, () => app.screen.height);
 
-  const player = spawnPlayer(world, views, physics, layers, 'jinyiwei', 0, 0);
+  const player = spawnPlayer(world, views, physics, layers, animation, 'jinyiwei', 0, 0);
 
   window.addEventListener('keydown', (e) => {
     if (state.phase !== 'choosing') return;
@@ -106,10 +108,11 @@ async function bootstrap(): Promise<void> {
       state.formedSynergyMsRemaining -= frameDeltaMs;
     }
 
+    animation.update(world, frameDeltaMs);
     renderSync.update(world, frameDeltaMs);
     statusVfx.update(world);
     camera.update(world);
-    hud.update(world, state);
+    hud.update(world, state, frameDeltaMs);
     overlay.frame(frameDeltaMs, world, physics);
   });
 }

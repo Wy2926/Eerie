@@ -1,4 +1,5 @@
 import { Container, Graphics, Text } from 'pixi.js';
+import { sin01 } from './anim';
 
 /** HUD 主题色：玄黑底、金饰边、宣纸白文字。 */
 export const HUD_COLORS = {
@@ -13,11 +14,27 @@ export const HUD_COLORS = {
   xpDark: 0x25502a,
 };
 
-/** 双线描金面板：外金线 + 内暗金线 + 半透明玄黑底。 */
-export function drawPanel(g: Graphics, x: number, y: number, w: number, h: number, alpha = 0.92): Graphics {
+/**
+ * 双线描金面板：外金线 + 内暗金线 + 半透明玄黑底。
+ * 传入 time（秒）时金边会随时间呼吸微闪，四角描金点缓慢脉冲。
+ */
+export function drawPanel(g: Graphics, x: number, y: number, w: number, h: number, alpha = 0.92, time?: number): Graphics {
+  const shimmer = time !== undefined ? 0.75 + sin01(time, 0.4) * 0.25 : 1;
   g.rect(x, y, w, h).fill({ color: HUD_COLORS.panel, alpha });
-  g.rect(x, y, w, h).stroke({ color: HUD_COLORS.panelBorder, width: 2 });
+  g.rect(x, y, w, h).stroke({ color: HUD_COLORS.panelBorder, width: 2, alpha: shimmer });
   g.rect(x + 3, y + 3, w - 6, h - 6).stroke({ color: HUD_COLORS.panelBorderDark, width: 1 });
+  if (time !== undefined) {
+    const pulse = sin01(time, 0.7);
+    const cornerAlpha = 0.5 + pulse * 0.5;
+    for (const [cx, cy] of [
+      [x + 1, y + 1],
+      [x + w - 3, y + 1],
+      [x + 1, y + h - 3],
+      [x + w - 3, y + h - 3],
+    ]) {
+      g.rect(cx, cy, 2, 2).fill({ color: HUD_COLORS.accent, alpha: cornerAlpha });
+    }
+  }
   return g;
 }
 
@@ -31,12 +48,17 @@ export function drawBar(
   ratio: number,
   color: number,
   darkColor: number,
+  time?: number,
 ): Graphics {
   g.rect(x, y, w, h).fill(0x0d0d12);
   const fillW = Math.max(0, Math.min(1, ratio)) * (w - 4);
   if (fillW > 0) {
     g.rect(x + 2, y + 2, fillW, h - 4).fill(darkColor);
     g.rect(x + 2, y + 2, fillW, Math.max(1, (h - 4) * 0.45)).fill(color);
+    // 条头光标：随时间闪烁，提示当前进度位置
+    if (time !== undefined && fillW > 3) {
+      g.rect(x + fillW - 1, y + 2, 3, h - 4).fill({ color: 0xffffff, alpha: 0.25 + sin01(time, 2.2) * 0.4 });
+    }
   }
   g.rect(x, y, w, h).stroke({ color: HUD_COLORS.panelBorderDark, width: 1 });
   // 四等分刻度

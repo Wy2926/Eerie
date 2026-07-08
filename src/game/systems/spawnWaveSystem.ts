@@ -7,6 +7,7 @@ import { TransformC } from '../components';
 import { EnemyTagC, PlayerTagC } from '../components/gameplay';
 import { spawnEnemy } from '../factories/entityFactory';
 import type { GameState } from '../gameState';
+import type { AnimationSystem } from './animationSystem';
 
 export class SpawnWaveSystem implements System {
   readonly name = 'SpawnWaveSystem';
@@ -17,6 +18,7 @@ export class SpawnWaveSystem implements System {
     private views: ViewRegistry,
     private physics: PhysicsWorld,
     private layers: RenderLayers,
+    private anim: AnimationSystem,
   ) {}
 
   update(world: World, dt: number): void {
@@ -53,6 +55,7 @@ export class SpawnWaveSystem implements System {
           this.views,
           this.physics,
           this.layers,
+          this.anim,
           enemyId,
           playerT.x + Math.cos(angle) * radius,
           playerT.y + Math.sin(angle) * radius,

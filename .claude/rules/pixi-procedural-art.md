@@ -16,7 +16,15 @@ paths:
 - 新增任何技能、角色、武器、怪物、特效、掉落物、UI 装饰素材，必须使用 `.claude/skills/` 中对应的 skill 流程。
 - 每个素材独立文件，放在 `src/game/art/`，导出 `createXxxView()` 工厂函数，用代码表达全部视觉。
 - 禁止把绘制代码内联在 systems、factories 或 main 中；这些位置只允许调用 art 工厂函数。
-- 现有素材文件示例：`jinyiwei.ts`、`wokou.ts`、`slashVfx.ts`、`swordWaveVfx.ts`、`xpGem.ts`。
+- 现有素材文件示例：`jinyiwei.ts`、`wokou.ts`、`slashVfx.ts`、`trailVfx.ts`、`swordWaveVfx.ts`、`xpGem.ts`。
+
+## 动画准则（强制）
+
+- 禁止静态图形：所有素材必须可动画化，每个部件（头/身/手/腿/武器）必须是独立 Container/Graphics，可单独旋转、位移、缩放。
+- 所有动画必须由时间（time）计算，用 `src/game/art/anim.ts` 中的 lerp / easing / 正弦 / 噪声 / 贝塞尔驱动连续插值；禁止引入外部 tween 库。
+- 角色类素材实现 `CharacterView`（见 `animatedView.ts`），由状态机（Idle/Run/Attack/Skill/Dash/Hit/Death）控制；人形角色复用 `humanoidRig.ts`。
+- 特效类素材实现 `VfxView`，按生命周期进度 progress 推进；武器挥动必须生成实时轨迹（Trail/Ribbon），技能必须包含持续变化的粒子、旋转、缩放与透明度变化。
+- 动画状态数据存在 ECS 组件（`AnimStateC`/`DyingC`），由 `AnimationSystem` 在帧阶段统一推进；视图只负责根据传入的 visual/time 重绘。
 
 ## 禁止
 
@@ -45,7 +53,7 @@ export function createPlayerView(options: ProceduralViewOptions): PIXI.Container
 
 - 整体风格为 **像素化 Q 版**：用 Graphics 绘制大像素块网格（逻辑像素 1 格 ≈ 屏幕 3~4px），角色约 2 头身，调色板每实体 4~6 色。
 - 关闭抗锯齿，缩放用最近邻（nearest），保持硬像素边缘；像素坐标对齐网格，避免亚像素模糊。
-- 动画用少量帧的像素位移/翻转/挤压，由 ECS 组件驱动。
+- 动画由时间连续插值驱动部件位移/旋转/挤压/翻转，状态来自 ECS 组件。
 - 俯视角可读性优先于复杂细节。
 - 使用剪影与调色板区分阵营、怪物类型、投射物危险度。
 - 玩家：高对比轮廓、中心清晰、方向标识明显。

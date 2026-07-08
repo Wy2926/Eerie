@@ -6,7 +6,8 @@ import type { ViewRegistry } from '../../core/render/viewRegistry';
 import { CHARACTERS } from '../balance/characters';
 import { ENEMIES } from '../balance/enemies';
 import { STATUSES, XUEYU_SPLASH_RADIUS } from '../balance/status';
-import { TransformC } from '../components';
+import { LifetimeC, TransformC } from '../components';
+import { AnimStateC, DyingC } from '../components/animation';
 import {
   DamageInboxC,
   EnemyTagC,
@@ -17,10 +18,13 @@ import {
 } from '../components/gameplay';
 import { spawnXp } from '../factories/entityFactory';
 import type { GameState } from '../gameState';
+import type { AnimationSystem } from './animationSystem';
 import { resolveBuild } from './build';
 import { applyStatus } from './statusSystem';
 
 const CONTACT_DAMAGE_INTERVAL_MS = 500;
+const HIT_ANIM_MS = 200;
+const DEATH_ANIM_MS = 450;
 
 /**
  * 结算所有伤害事件：接触伤害、命中伤害、状态 tick、处决与死亡。
@@ -35,6 +39,7 @@ export class DamageSystem implements System {
     private physics: PhysicsWorld,
     private views: ViewRegistry,
     private layers: RenderLayers,
+    private anim: AnimationSystem,
     private damageInboxEntity: number,
   ) {}
 
@@ -77,7 +82,11 @@ export class DamageSystem implements System {
     for (const event of events) {
       const health = world.getComponent(event.target, HealthC);
       if (!health || !world.isAlive(event.target)) continue;
+      if (world.hasComponent(event.target, DyingC)) continue;
       health.hp -= event.amount;
+
+      const animState = world.getComponent(event.target, AnimStateC);
+      if (animState) animState.hitMs = HIT_ANIM_MS;
 
       const isEnemy = world.hasComponent(event.target, EnemyTagC);
       if (isEnemy && event.fromPlayerHit && resolved && character) {
@@ -110,7 +119,7 @@ export class DamageSystem implements System {
   private onEnemyDeath(world: World, entity: number, xueyuActive: boolean, bleedMaxStacks: number): void {
     const t = world.getComponent(entity, TransformC)!;
     const cfg = ENEMIES[world.getComponent(entity, EnemyTagC)!.enemyId];
-    spawnXp(world, this.views, this.layers, t.x, t.y, cfg.xp);
+    spawnXp(world, this.views, this.layers, this.anim, t.x, t.y, cfg.xp);
 
     // 血狱追猎：流血敌人死亡向周围溅射流血
     const wasBleeding = world.getComponent(entity, StatusEffectsC)?.active.has('bleed') ?? false;
@@ -123,7 +132,10 @@ export class DamageSystem implements System {
         }
       }
     }
-    world.destroyEntity(entity);
+    // 死亡演出：立即移除碰撞体，实体保留到动画结束后销毁
+    this.physics.removeBody(entity);
+    world.addComponent(entity, DyingC, { elapsedMs: 0, totalMs: DEATH_ANIM_MS });
+    world.addComponent(entity, LifetimeC, { remainingMs: DEATH_ANIM_MS });
   }
 
   private flashExecute(world: World, entity: number): void {

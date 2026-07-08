@@ -1,9 +1,13 @@
-import { Container, Graphics } from 'pixi.js';
-import { createPixelSprite } from './pixelSprite';
+import { Graphics, type Container } from 'pixi.js';
+import type { CharacterView, CharacterVisual } from './animatedView';
+import { sin01 } from './anim';
+import { HumanoidRig } from './humanoidRig';
+import { createPixelPart } from './pixelSprite';
 
 /**
- * 倭寇成品素材：矮壮 Q 版，束发髻 + 破衣 + 短刀，低复杂度可批量渲染。
- * 精英变体：更大体型 + 红头巾 + 金色轮廓光环，一眼可辨。
+ * 倭寇动画素材：部件独立（头/躯干/双手/双腿/短刀），
+ * 由 HumanoidRig 状态机驱动 Run / Hit / Death；每个实例随机相位避免群体同步。
+ * 精英变体：红头巾 + 呼吸脉冲的金色光环。
  */
 const PALETTE = {
   o: 0x17140f, // 描边
@@ -16,34 +20,84 @@ const PALETTE = {
   r: 0xa8322a, // 精英红头巾
 };
 
-const ROWS = [
-  '....ok......',
-  '..oookoo....',
-  '.otttttto...',
-  '.osssssso...',
-  '.osesseso...',
-  '.osssssso...',
-  '..ossss.om..',
-  '.obbbbbboom.',
-  'obdbbbbdbom.',
-  'obbbdbbbbo..',
-  '.obbbbbbo...',
-  '..obb.bbo...',
-  '..oo...oo...',
+const HEAD_ROWS = [
+  '...kk...',
+  '..oooo..',
+  '.otttto.',
+  '.osssso.',
+  '.oseseo.',
+  '.osssso.',
+  '..oooo..',
 ];
 
-function rowsFor(elite: boolean): string[] {
-  // 头巾行：普通用发色，精英用红头巾
-  return ROWS.map((row) => row.replace(/t/g, elite ? 'r' : 'k'));
+const TORSO_ROWS = [
+  'obbbbbbo',
+  'obdbbdbo',
+  'obbbbbbo',
+  'oddddddo',
+];
+
+const ARM_ROWS = ['bb', 'bb', 'ss'];
+
+const LEG_ROWS = ['bb', 'dd', 'oo'];
+
+const KNIFE_ROWS = ['m', 'm', 'm', 'o'];
+
+function headRows(elite: boolean): string[] {
+  return HEAD_ROWS.map((row) => row.replace(/t/g, elite ? 'r' : 'k'));
 }
 
-export function createWokouView(scale = 3, elite = false): Container {
-  const root = createPixelSprite({ rows: rowsFor(elite), palette: PALETTE, scale });
-  if (elite) {
-    const aura = new Graphics();
-    aura.circle(0, 2 * scale, 8.5 * scale).stroke({ color: 0xd4a941, width: 2, alpha: 0.8 });
-    aura.circle(0, 2 * scale, 9.5 * scale).stroke({ color: 0xd4a941, width: 1, alpha: 0.35 });
-    root.addChildAt(aura, 0);
+class WokouView implements CharacterView {
+  private rig: HumanoidRig;
+  private aura?: Graphics;
+  readonly root: Container;
+
+  constructor(scale: number, elite: boolean) {
+    const S = scale;
+    const head = createPixelPart({ rows: headRows(elite), palette: PALETTE, scale: S, pivotX: 4, pivotY: 7 });
+    const torso = createPixelPart({ rows: TORSO_ROWS, palette: PALETTE, scale: S, pivotX: 4, pivotY: 0 });
+    const armFront = createPixelPart({ rows: ARM_ROWS, palette: PALETTE, scale: S, pivotX: 1, pivotY: 0.5 });
+    const armBack = createPixelPart({ rows: ARM_ROWS, palette: PALETTE, scale: S, pivotX: 1, pivotY: 0.5 });
+    const legFront = createPixelPart({ rows: LEG_ROWS, palette: PALETTE, scale: S, pivotX: 1, pivotY: 0 });
+    const legBack = createPixelPart({ rows: LEG_ROWS, palette: PALETTE, scale: S, pivotX: 1, pivotY: 0 });
+    const weapon = createPixelPart({ rows: KNIFE_ROWS, palette: PALETTE, scale: S, pivotX: 0.5, pivotY: 3.5 });
+    weapon.position.set(0, 2.5 * S);
+
+    this.rig = new HumanoidRig({
+      parts: { head, torso, armFront, armBack, legFront, legBack, weapon },
+      shoulder: { x: 3.5 * S, y: 0.5 * S },
+      hip: { x: 1.5 * S, y: 4 * S },
+      neck: { x: 0, y: 0 },
+      strideAmp: 0.65,
+    });
+    this.root = this.rig.root;
+
+    if (elite) {
+      this.aura = new Graphics();
+      this.root.addChildAt(this.aura, 0);
+    }
   }
-  return root;
+
+  update(dt: number, v: CharacterVisual): void {
+    this.rig.update(dt, v);
+    if (this.aura) {
+      // 精英光环：半径与透明度随时间脉冲，缓慢旋转的三段弧
+      const pulse = sin01(v.time, 1.2);
+      const radius = 26 + pulse * 4;
+      this.aura.clear();
+      for (let i = 0; i < 3; i++) {
+        const base = v.time * 1.5 + (i * Math.PI * 2) / 3;
+        this.aura.arc(0, 6, radius, base, base + 1.6).stroke({
+          color: 0xd4a941,
+          width: 2,
+          alpha: 0.45 + pulse * 0.35,
+        });
+      }
+      this.aura.alpha = v.state === 'death' ? 1 - v.stateProgress : 1;
+    }
+  }
+}
+
+export function createWokouView(scale = 3, elite = false): CharacterView {
+  return new WokouView(scale, elite);
 }

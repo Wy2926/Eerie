@@ -2,15 +2,19 @@ import type { System, World } from '../../core/ecs/world';
 import type { RenderLayers } from '../../core/render/pixiApp';
 import type { ViewRegistry } from '../../core/render/viewRegistry';
 import { WEAPONS } from '../balance/weapons';
-import { createSlashView, createTrailView } from '../art/slashVfx';
-import { createSwordWaveView } from '../art/swordWaveVfx';
+import { createSlashVfx } from '../art/slashVfx';
+import { createSwordWaveVfx } from '../art/swordWaveVfx';
+import { createTrailVfx } from '../art/trailVfx';
 import { LifetimeC, RenderRefC, TransformC } from '../components';
+import { AnimStateC, DyingC } from '../components/animation';
 import { AttackAreaC, EnemyTagC, FacingC, HealthC, PlayerBuildC, PlayerTagC, WeaponStateC } from '../components/gameplay';
+import type { AnimationSystem } from './animationSystem';
 import { resolveBuild, type ResolvedBuild } from './build';
 
 const SWORD_WAVE_SPEED = 360;
 const SWORD_WAVE_LIFETIME_MS = 500;
 const TRAIL_LIFETIME_MS = 600;
+const SLASH_LIFETIME_MS = 220;
 /** 自动瞄准搜索半径 */
 const AIM_RADIUS = 320;
 
@@ -20,6 +24,7 @@ export class WeaponFireSystem implements System {
   constructor(
     private views: ViewRegistry,
     private layers: RenderLayers,
+    private anim: AnimationSystem,
   ) {}
 
   update(world: World, dt: number): void {
@@ -42,6 +47,12 @@ export class WeaponFireSystem implements System {
       const t = world.getComponent(entity, TransformC)!;
       const facing = world.getComponent(entity, FacingC)!;
       const aimAngle = this.aimAtNearestEnemy(world, t.x, t.y) ?? facing.angle;
+      const animState = world.getComponent(entity, AnimStateC);
+      if (animState) {
+        animState.attackMs = SLASH_LIFETIME_MS;
+        animState.attackDurationMs = SLASH_LIFETIME_MS;
+        animState.attackAngle = aimAngle;
+      }
       this.spawnSlash(world, t.x, t.y, aimAngle, cfg.damage, cfg.range, cfg.arc, build);
       if (build.doubleSlash) {
         this.spawnSlash(world, t.x, t.y, aimAngle + Math.PI, cfg.damage, cfg.range, cfg.arc, build);
@@ -57,6 +68,7 @@ export class WeaponFireSystem implements System {
     let bestDist = AIM_RADIUS;
     let bestAngle: number | undefined;
     for (const enemy of world.query(EnemyTagC, TransformC)) {
+      if (world.hasComponent(enemy, DyingC)) continue;
       const et = world.getComponent(enemy, TransformC)!;
       const dist = Math.hypot(et.x - x, et.y - y);
       if (dist < bestDist) {
@@ -83,7 +95,7 @@ export class WeaponFireSystem implements System {
     const entity = world.createEntity();
     world.addComponent(entity, TransformC, { x, y, rotation: 0 });
     world.addComponent(entity, RenderRefC, { layer: 'vfx' });
-    world.addComponent(entity, LifetimeC, { remainingMs: 150 });
+    world.addComponent(entity, LifetimeC, { remainingMs: SLASH_LIFETIME_MS });
     world.addComponent(entity, AttackAreaC, {
       damage,
       fromPlayerHit: true,
@@ -98,9 +110,10 @@ export class WeaponFireSystem implements System {
       vy: 0,
     });
 
-    const g = createSlashView(range, angle, arc);
-    this.layers.vfx.addChild(g);
-    this.views.set(entity, g);
+    const view = createSlashVfx(range, angle, arc);
+    this.layers.vfx.addChild(view.root);
+    this.views.set(entity, view.root);
+    this.anim.registerVfx(entity, view, SLASH_LIFETIME_MS);
 
     if (build.trail) {
       this.spawnTrail(world, x, y, angle, damage * 0.3, range, arc);
@@ -133,9 +146,10 @@ export class WeaponFireSystem implements System {
       vx: 0,
       vy: 0,
     });
-    const g = createTrailView(range, angle, arc);
-    this.layers.vfx.addChild(g);
-    this.views.set(entity, g);
+    const view = createTrailVfx(range, angle, arc);
+    this.layers.vfx.addChild(view.root);
+    this.views.set(entity, view.root);
+    this.anim.registerVfx(entity, view, TRAIL_LIFETIME_MS);
   }
 
   private spawnSwordWave(world: World, x: number, y: number, angle: number, damage: number, build: ResolvedBuild): void {
@@ -156,8 +170,9 @@ export class WeaponFireSystem implements System {
       vx: Math.cos(angle) * SWORD_WAVE_SPEED,
       vy: Math.sin(angle) * SWORD_WAVE_SPEED,
     });
-    const g = createSwordWaveView(angle);
-    this.layers.vfx.addChild(g);
-    this.views.set(entity, g);
+    const view = createSwordWaveVfx(angle);
+    this.layers.vfx.addChild(view.root);
+    this.views.set(entity, view.root);
+    this.anim.registerVfx(entity, view, SWORD_WAVE_LIFETIME_MS);
   }
 }

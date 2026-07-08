@@ -3,6 +3,7 @@ import type { World } from '../../core/ecs/world';
 import { BINGFAS, type BingfaCategory } from '../balance/bingfa';
 import { SYNERGIES } from '../balance/status';
 import { RUN_DURATION_SEC } from '../balance/waves';
+import { easeOutCubic } from '../art/anim';
 import { HUD_COLORS, createChoiceCard, drawBar, drawPanel } from '../art/hudFrames';
 import { HealthC, PlayerBuildC, PlayerTagC } from '../components/gameplay';
 import type { GameState } from '../gameState';
@@ -42,6 +43,10 @@ export class Hud {
   private endPanel: Container;
   private endText: Text;
   private endSubText: Text;
+  /** HUD 自身时钟（秒）：选择/结算阶段也持续推进，驱动面板呼吸与入场动画 */
+  private timeSec = 0;
+  private choiceShownMs = 0;
+  private endShownMs = 0;
 
   constructor(
     parent: Container,
@@ -101,7 +106,9 @@ export class Hud {
     this.root.addChild(this.endPanel);
   }
 
-  update(world: World, state: GameState): void {
+  update(world: World, state: GameState, dtMs: number): void {
+    this.timeSec += dtMs / 1000;
+    const time = this.timeSec;
     const w = this.screenWidth();
     const h = this.screenHeight();
     const players = world.query(PlayerTagC, HealthC, PlayerBuildC);
@@ -110,25 +117,35 @@ export class Hud {
       const build = world.getComponent(players[0], PlayerBuildC)!;
 
       this.hpPanel.clear();
-      drawPanel(this.hpPanel, 12, h - 64, 248, 52, 0.85);
-      drawBar(this.hpPanel, 22, h - 36, 228, 16, health.hp / health.maxHp, HUD_COLORS.hp, HUD_COLORS.hpDark);
+      drawPanel(this.hpPanel, 12, h - 64, 248, 52, 0.85, time);
+      drawBar(this.hpPanel, 22, h - 36, 228, 16, health.hp / health.maxHp, HUD_COLORS.hp, HUD_COLORS.hpDark, time);
       this.hpText.text = `${Math.max(0, Math.ceil(health.hp))} / ${health.maxHp}`;
       this.hpText.position.set(22, h - 58);
       this.levelText.text = `Lv.${build.level}`;
       this.levelText.position.set(250 - this.levelText.width, h - 58);
 
       this.xpBar.clear();
-      drawBar(this.xpBar, 0, 0, w, 10, build.xp / build.xpToNext, HUD_COLORS.xp, HUD_COLORS.xpDark);
+      drawBar(this.xpBar, 0, 0, w, 10, build.xp / build.xpToNext, HUD_COLORS.xp, HUD_COLORS.xpDark, time);
     }
 
     const totalSec = Math.floor(state.elapsedMs / 1000);
     const remain = Math.max(0, RUN_DURATION_SEC - totalSec);
     this.timeText.text = `${String(Math.floor(remain / 60)).padStart(2, '0')}:${String(remain % 60).padStart(2, '0')}`;
     this.timePanel.clear();
-    drawPanel(this.timePanel, w / 2 - 48, 16, 96, 34, 0.85);
+    drawPanel(this.timePanel, w / 2 - 48, 16, 96, 34, 0.85, time);
     this.timeText.position.set(w / 2 - this.timeText.width / 2, 22);
 
-    this.choicePanel.visible = state.phase === 'choosing';
+    // 三选一面板入场：淡入 + 上滑（easeOutCubic）
+    if (state.phase === 'choosing') {
+      this.choiceShownMs += dtMs;
+      const p = easeOutCubic(Math.min(1, this.choiceShownMs / 260));
+      this.choicePanel.visible = true;
+      this.choicePanel.alpha = p;
+      this.choicePanel.y = (1 - p) * 24;
+    } else {
+      this.choiceShownMs = 0;
+      this.choicePanel.visible = false;
+    }
 
     if (state.formedSynergyId && state.formedSynergyMsRemaining > 0) {
       const synergy = SYNERGIES[state.formedSynergyId];
@@ -145,7 +162,10 @@ export class Hud {
     }
 
     if (state.phase === 'victory' || state.phase === 'defeat') {
+      this.endShownMs += dtMs;
+      const p = easeOutCubic(Math.min(1, this.endShownMs / 500));
       this.endPanel.visible = true;
+      this.endPanel.alpha = p;
       this.endPanel.removeChildren();
       this.endText.text = state.phase === 'victory' ? '大捷！倭寇溃退' : '力战殉国';
       this.endSubText.text = state.phase === 'victory' ? '海疆暂靖，另择兵法再战' : '刷新页面，重整旗鼓';

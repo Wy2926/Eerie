@@ -1,5 +1,6 @@
 import type { System, World } from '../../core/ecs/world';
 import { TransformC } from '../components';
+import { DyingC } from '../components/animation';
 import { AttackAreaC, DamageInboxC, EnemyTagC } from '../components/gameplay';
 
 function angleDiff(a: number, b: number): number {
@@ -31,6 +32,7 @@ export class AttackHitSystem implements System {
       }
       for (const enemy of enemies) {
         if (area.hitEntities.has(enemy)) continue;
+        if (world.hasComponent(enemy, DyingC)) continue;
         const et = world.getComponent(enemy, TransformC)!;
         const dx = et.x - area.x;
         const dy = et.y - area.y;

@@ -11,6 +11,8 @@ import { createJinyiweiView } from '../art/jinyiwei';
 import { createWokouView } from '../art/wokou';
 import { createXpGemView } from '../art/xpGem';
 import { PhysicsRefC, RenderRefC, TransformC } from '../components';
+import { AnimStateC } from '../components/animation';
+import type { AnimationSystem } from '../systems/animationSystem';
 import {
   EnemyTagC,
   FacingC,
@@ -29,6 +31,7 @@ export function spawnPlayer(
   views: ViewRegistry,
   physics: PhysicsWorld,
   layers: RenderLayers,
+  anim: AnimationSystem,
   characterId: string,
   x: number,
   y: number,
@@ -54,9 +57,21 @@ export function spawnPlayer(
     pendingLevelUps: 0,
   });
 
+  world.addComponent(entity, AnimStateC, {
+    attackMs: 0,
+    attackDurationMs: 1,
+    attackAngle: 0,
+    hitMs: 0,
+    prevX: x,
+    prevY: y,
+    facing: 0,
+    maxSpeed: cfg.moveSpeed,
+  });
+
   const view = createJinyiweiView();
-  layers.world.addChild(view);
-  views.set(entity, view);
+  layers.world.addChild(view.root);
+  views.set(entity, view.root);
+  anim.registerCharacter(entity, view);
 
   const body = Matter.Bodies.circle(x, y, 12, {
     frictionAir: 0,
@@ -72,6 +87,7 @@ export function spawnEnemy(
   views: ViewRegistry,
   physics: PhysicsWorld,
   layers: RenderLayers,
+  anim: AnimationSystem,
   enemyId: string,
   x: number,
   y: number,
@@ -85,9 +101,21 @@ export function spawnEnemy(
   world.addComponent(entity, HealthC, { hp: cfg.maxHp, maxHp: cfg.maxHp });
   world.addComponent(entity, StatusEffectsC, { active: new Map() });
 
+  world.addComponent(entity, AnimStateC, {
+    attackMs: 0,
+    attackDurationMs: 1,
+    attackAngle: 0,
+    hitMs: 0,
+    prevX: x,
+    prevY: y,
+    facing: 0,
+    maxSpeed: cfg.moveSpeed,
+  });
+
   const view = createWokouView(3 * cfg.scale, cfg.elite);
-  layers.world.addChild(view);
-  views.set(entity, view);
+  layers.world.addChild(view.root);
+  views.set(entity, view.root);
+  anim.registerCharacter(entity, view);
 
   const body = Matter.Bodies.circle(x, y, 10 * cfg.scale, {
     frictionAir: 0,
@@ -102,6 +130,7 @@ export function spawnXp(
   world: World,
   views: ViewRegistry,
   layers: RenderLayers,
+  anim: AnimationSystem,
   x: number,
   y: number,
   amount: number,
@@ -111,9 +140,10 @@ export function spawnXp(
   world.addComponent(entity, RenderRefC, { layer: 'world' });
   world.addComponent(entity, XpPickupC, { amount, magnetized: false });
 
-  const g = createXpGemView(amount);
-  layers.world.addChild(g);
-  views.set(entity, g);
+  const view = createXpGemView(amount);
+  layers.world.addChild(view.root);
+  views.set(entity, view.root);
+  anim.registerVfx(entity, view, Infinity);
   return entity;
 }
 

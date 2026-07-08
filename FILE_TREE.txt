@@ -41,6 +41,7 @@
 ./docs/adr/0002-pixi-procedural-assets-only.md
 ./docs/adr/0003-matter-fixed-timestep.md
 ./docs/prd/01-core-vision-and-build-system.md
+./docs/prd/02-mvp-first-slice.md
 ./docs/templates/BINGFA_TEMPLATE.md
 ./docs/templates/CHARACTER_TEMPLATE.md
 ./docs/templates/ENEMY_TEMPLATE.md

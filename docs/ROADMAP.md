@@ -10,14 +10,14 @@
 - 自研 ECS 最小实现。
 - Debug overlay。
 
-## Phase 1: First Playable Loop
+## Phase 1: First Playable Loop（MVP 第一版，见 `docs/prd/02-mvp-first-slice.md`）
 
-- 玩家移动（首个角色，程序化绘制）。
-- 基础倭寇程序化绘制，追踪玩家。
-- 一把初始武器自动攻击。
+- 锦衣卫（处决机制）+ 绣春刀，像素化 Q 版程序化绘制。
+- 倭寇杂兵追踪玩家，3 分钟后精英变体。
 - 碰撞和伤害。
 - XP 掉落和拾取。
-- 升级三选一兵法（先只含基础兵法 + 少量武器改造）。
+- 升级三选一兵法（MVP 兵法池约 12 个：基础4 + 武器改造4 + 状态2 + 规则2）。
+- 流血状态（StatusSystem）与首条联动「血狱追猎」成型提示。
 
 ## Phase 2: Build System Core
 

@@ -1,0 +1,38 @@
+---
+name: create-vfx
+description: 创建 PixiJS 程序化特效，包括命中、爆炸、升级、拾取、危险预警、Boss 技能、死亡和屏幕反馈。
+argument-hint: "[vfx-name]"
+---
+
+# Create VFX Skill
+
+## VFX 原则
+
+- 代码绘制，不使用图片。
+- 短生命周期，用 `Lifetime` 控制。
+- 大量出现时使用对象池。
+- 视觉表达必须服务玩法可读性。
+- 危险预警要比伤害发生更早出现。
+
+## VFX Component 建议
+
+- `VfxTag`
+- `Lifetime`
+- `Transform`
+- `RenderRef`
+- `VfxState`
+- `FollowEntity`
+
+## 常见效果
+
+- 命中闪光：小圆、星形、短线爆发。
+- 升级：环形扩散、向上粒子、中心光圈。
+- 掉落吸附：拖尾线、缩放、透明度变化。
+- Boss 预警：红色范围、脉冲边界、方向箭头。
+- 死亡：碎片、淡出、压扁或爆散。
+
+## 性能检查
+
+- 不要每帧创建新 Graphics 树。
+- 不要永久保留已完成特效。
+- 不要让 VFX System 读取复杂玩法状态。

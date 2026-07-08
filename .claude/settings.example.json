@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push *)",
+      "Bash(rm -rf *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*secret*)",
+      "Read(./**/*token*)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(pnpm add *)",
+      "Bash(yarn add *)"
+    ],
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(pnpm run *)",
+      "Bash(git status)",
+      "Bash(git diff *)"
+    ]
+  }
+}

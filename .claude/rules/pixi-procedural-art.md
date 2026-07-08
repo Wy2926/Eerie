@@ -10,6 +10,13 @@ paths:
 
 本项目所有可见素材都由 PixiJS 代码绘制。
 
+## 素材准则（强制）
+
+- 新增任何技能、角色、武器、怪物、特效、掉落物、UI 装饰素材，必须使用 `.claude/skills/` 中对应的 skill 流程。
+- 每个素材独立文件，放在 `src/game/art/`，导出 `createXxxView()` 工厂函数，用代码表达全部视觉。
+- 禁止把绘制代码内联在 systems、factories 或 main 中；这些位置只允许调用 art 工厂函数。
+- 现有素材文件示例：`jinyiwei.ts`、`wokou.ts`、`slashVfx.ts`、`swordWaveVfx.ts`、`xpGem.ts`。
+
 ## 禁止
 
 - 不要导入图片素材：png、jpg、jpeg、webp、gif、svg。

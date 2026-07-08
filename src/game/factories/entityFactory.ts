@@ -1,5 +1,4 @@
 import Matter from 'matter-js';
-import { Graphics } from 'pixi.js';
 import type { Entity, World } from '../../core/ecs/world';
 import type { PhysicsWorld } from '../../core/physics/physicsWorld';
 import type { RenderLayers } from '../../core/render/pixiApp';
@@ -8,7 +7,9 @@ import { CHARACTERS } from '../balance/characters';
 import { ENEMIES } from '../balance/enemies';
 import { WEAPONS } from '../balance/weapons';
 import { xpForNextLevel } from '../balance/xp';
-import { createJinyiweiView, createWokouView } from '../art/characters';
+import { createJinyiweiView } from '../art/jinyiwei';
+import { createWokouView } from '../art/wokou';
+import { createXpGemView } from '../art/xpGem';
 import { PhysicsRefC, RenderRefC, TransformC } from '../components';
 import {
   EnemyTagC,
@@ -110,9 +111,7 @@ export function spawnXp(
   world.addComponent(entity, RenderRefC, { layer: 'world' });
   world.addComponent(entity, XpPickupC, { amount, magnetized: false });
 
-  const g = new Graphics();
-  const size = amount > 1 ? 8 : 6;
-  g.rect(-size / 2, -size / 2, size, size).fill(amount > 1 ? 0x64d8ff : 0x7fe07f);
+  const g = createXpGemView(amount);
   layers.world.addChild(g);
   views.set(entity, g);
   return entity;

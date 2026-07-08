@@ -1,15 +1,18 @@
-import { Graphics } from 'pixi.js';
 import type { System, World } from '../../core/ecs/world';
 import type { RenderLayers } from '../../core/render/pixiApp';
 import type { ViewRegistry } from '../../core/render/viewRegistry';
 import { WEAPONS } from '../balance/weapons';
+import { createSlashView, createTrailView } from '../art/slashVfx';
+import { createSwordWaveView } from '../art/swordWaveVfx';
 import { LifetimeC, RenderRefC, TransformC } from '../components';
-import { AttackAreaC, FacingC, HealthC, PlayerBuildC, PlayerTagC, WeaponStateC } from '../components/gameplay';
+import { AttackAreaC, EnemyTagC, FacingC, HealthC, PlayerBuildC, PlayerTagC, WeaponStateC } from '../components/gameplay';
 import { resolveBuild, type ResolvedBuild } from './build';
 
 const SWORD_WAVE_SPEED = 360;
 const SWORD_WAVE_LIFETIME_MS = 500;
 const TRAIL_LIFETIME_MS = 600;
+/** 自动瞄准搜索半径 */
+const AIM_RADIUS = 320;
 
 export class WeaponFireSystem implements System {
   readonly name = 'WeaponFireSystem';
@@ -38,14 +41,30 @@ export class WeaponFireSystem implements System {
 
       const t = world.getComponent(entity, TransformC)!;
       const facing = world.getComponent(entity, FacingC)!;
-      this.spawnSlash(world, t.x, t.y, facing.angle, cfg.damage, cfg.range, cfg.arc, build);
+      const aimAngle = this.aimAtNearestEnemy(world, t.x, t.y) ?? facing.angle;
+      this.spawnSlash(world, t.x, t.y, aimAngle, cfg.damage, cfg.range, cfg.arc, build);
       if (build.doubleSlash) {
-        this.spawnSlash(world, t.x, t.y, facing.angle + Math.PI, cfg.damage, cfg.range, cfg.arc, build);
+        this.spawnSlash(world, t.x, t.y, aimAngle + Math.PI, cfg.damage, cfg.range, cfg.arc, build);
       }
       if (build.swordWave) {
-        this.spawnSwordWave(world, t.x, t.y, facing.angle, cfg.damage * 0.6, build);
+        this.spawnSwordWave(world, t.x, t.y, aimAngle, cfg.damage * 0.6, build);
       }
     }
+  }
+
+  /** 自动瞄准：朝最近的敌人方向攻击，无敌人时回退到移动朝向。 */
+  private aimAtNearestEnemy(world: World, x: number, y: number): number | undefined {
+    let bestDist = AIM_RADIUS;
+    let bestAngle: number | undefined;
+    for (const enemy of world.query(EnemyTagC, TransformC)) {
+      const et = world.getComponent(enemy, TransformC)!;
+      const dist = Math.hypot(et.x - x, et.y - y);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestAngle = Math.atan2(et.y - y, et.x - x);
+      }
+    }
+    return bestAngle;
   }
 
   private spawnSlash(
@@ -79,11 +98,7 @@ export class WeaponFireSystem implements System {
       vy: 0,
     });
 
-    const g = new Graphics();
-    g.moveTo(0, 0)
-      .arc(0, 0, range, angle - arc / 2, angle + arc / 2)
-      .lineTo(0, 0)
-      .fill({ color: 0xf5f0e6, alpha: 0.45 });
+    const g = createSlashView(range, angle, arc);
     this.layers.vfx.addChild(g);
     this.views.set(entity, g);
 
@@ -118,18 +133,14 @@ export class WeaponFireSystem implements System {
       vx: 0,
       vy: 0,
     });
-    const g = new Graphics();
-    g.moveTo(0, 0)
-      .arc(0, 0, range, angle - arc / 2, angle + arc / 2)
-      .lineTo(0, 0)
-      .fill({ color: 0xd63030, alpha: 0.18 });
+    const g = createTrailView(range, angle, arc);
     this.layers.vfx.addChild(g);
     this.views.set(entity, g);
   }
 
   private spawnSwordWave(world: World, x: number, y: number, angle: number, damage: number, build: ResolvedBuild): void {
     const entity = world.createEntity();
-    world.addComponent(entity, TransformC, { x, y, rotation: angle });
+    world.addComponent(entity, TransformC, { x, y, rotation: 0 });
     world.addComponent(entity, RenderRefC, { layer: 'vfx' });
     world.addComponent(entity, LifetimeC, { remainingMs: SWORD_WAVE_LIFETIME_MS });
     world.addComponent(entity, AttackAreaC, {
@@ -145,8 +156,7 @@ export class WeaponFireSystem implements System {
       vx: Math.cos(angle) * SWORD_WAVE_SPEED,
       vy: Math.sin(angle) * SWORD_WAVE_SPEED,
     });
-    const g = new Graphics();
-    g.arc(0, 0, 16, angle - 0.6, angle + 0.6).stroke({ color: 0xbfe8ff, width: 4, alpha: 0.9 });
+    const g = createSwordWaveView(angle);
     this.layers.vfx.addChild(g);
     this.views.set(entity, g);
   }
